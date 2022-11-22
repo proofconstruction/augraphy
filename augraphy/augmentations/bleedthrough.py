@@ -1,6 +1,8 @@
 import os
 import random
 from glob import glob
+from typing import Tuple
+from typing import Union
 
 import cv2
 import numpy as np
@@ -17,34 +19,27 @@ class BleedThrough(Augmentation):
 
     :param intensity_range: Pair of floats determining the range from which
            noise intensity is sampled.
-    :type intensity: tuple, optional
     :param color_range: Pair of ints determining the range from which color
            noise is sampled.
-    :type color_range: tuple, optional
     :param ksize: Tuple of height/width pairs from which to sample the kernel
            size. Higher value increases the spreadness of bleeding effect.
-    :type ksizes: tuple, optional
     :param sigmaX: Standard deviation of the kernel along the x-axis.
-    :type sigmaX: float, optional
     :param alpha: Intensity of bleeding effect, recommended value range from
             0.1 to 0.5.
-    :type alpha: float, optional
     :param offsets: Tuple of x and y offset pair to shift the bleed through
             effect from original input.
-    :type offsets: tuple, optional
     :param p: The probability this Augmentation will be applied.
-    :type p: float, optional
     """
 
     def __init__(
         self,
-        intensity_range=(0.1, 0.9),
-        color_range=(0, 224),
-        ksize=(17, 17),
-        sigmaX=1,
-        alpha=0.2,
-        offsets=(20, 20),
-        p=1,
+        intensity_range: Tuple[float, float] = (0.1, 0.9),
+        color_range: Tuple[int, int] = (0, 224),
+        ksize: Tuple[int, int] = (17, 17),
+        sigmaX: float = 1,
+        alpha: float = 0.2,
+        offsets: Tuple[int, int] = (20, 20),
+        p: float = 1,
     ):
         super().__init__(p=p)
         self.intensity_range = intensity_range
@@ -58,15 +53,11 @@ class BleedThrough(Augmentation):
     def __repr__(self):
         return f"BleedThrough(intensity_range={self.intensity_range}, color_range={self.color_range}, ksize={self.ksize}, sigmaX={self.sigmaX},alpha={self.alpha},offsets={self.offsets},p={self.p})"
 
-    def blend(self, img, img_bleed, alpha):
+    def blend(self, img: np.ndarray, img_bleed: np.ndarray) -> np.ndarray:
         """Blend two images based on the alpha value to create bleedthrough effect.
 
         :param img: The background image to apply the blending function.
-        :type img: numpy.array (numpy.uint8)
         :param img_bleed: The foreground image to apply the blending function.
-        :type img_bleed: numpy.array (numpy.uint8)
-        :param alpha: The alpha value of foreground image for the blending function.
-        :type alpha: float
         """
 
         # convert to single channel to avoud unnecessary noise in colour image
@@ -96,13 +87,11 @@ class BleedThrough(Augmentation):
         )
         return ob.build_overlay()
 
-    def generate_offset(self, img_bleed, offsets):
+    def generate_offset(self, img_bleed: np.ndarray, offsets: Tuple[int, int]) -> np.ndarray:
         """Offset image based on the input offset value so that bleedthrough effect is visible and not stacked with background image.
 
         :param img_bleed: The input image to apply the offset function.
-        :type img_bleed: numpy.array (numpy.uint8)
         :param offsets: The offset value.
-        :type offsets: int
         """
 
         x_offset = offsets[0]
@@ -117,19 +106,21 @@ class BleedThrough(Augmentation):
             img_bleed[y_offset:, x_offset:] = img_bleed[:-y_offset, :-x_offset]
         return img_bleed
 
-    def generate_bleeding_ink(self, img, intensity_range, color_range, ksize, sigmaX):
+    def generate_bleeding_ink(
+        self,
+        img: np.ndarray,
+        intensity_range: Tuple[float, float],
+        color_range: Tuple[int, int],
+        ksize: Tuple[int, int],
+        sigmaX: float,
+    ) -> np.ndarray:
         """Preprocess and create bleeding ink effect in the input image.
 
         :param img: The input image to apply the offset function.
-        :type img: numpy.array (numpy.uint8)
         :param intensity_range: Pair of floats determining the range from which noise intensity is sampled.
-        :type intensity_range: tuple
         :param color_range: Pair of ints determining the range from which color noise is sampled.
-        :type color_range: tuple
         :param ksize: Tuple of height/width pairs from which to sample the kernel size. Higher value increases the spreadness of bleeding effect.
-        :type ksize: tuple
         :param sigmaX: Standard deviation of the kernel along the x-axis.
-        :type sigmaX: float
         """
         intensity = random.uniform(intensity_range[0], intensity_range[1])
         add_noise_fn = (
@@ -144,11 +135,10 @@ class BleedThrough(Augmentation):
         return img_bleed
 
     # create foreground image for bleedthrough effect
-    def create_bleedthrough_foreground(self, image):
+    def create_bleedthrough_foreground(self, image: np.ndarray) -> np.ndarray:
         """Create foreground image for bleedthrough effect.
 
         :param image: The background image of the bleedthrough effect.
-        :type image: numpy.array (numpy.uint8)
         """
 
         # path to foreground cache folder
@@ -185,7 +175,7 @@ class BleedThrough(Augmentation):
         return image_bleedthrough_foreground
 
     # Applies the Augmentation to input data.
-    def __call__(self, image, layer=None, force=False):
+    def __call__(self, image: np.ndarray, force: bool = False) -> np.ndarray:
         if force or self.should_run():
             image = image.copy()
 
@@ -199,6 +189,6 @@ class BleedThrough(Augmentation):
                 self.sigmaX,
             )
             image_bleed_offset = self.generate_offset(image_bleed, self.offsets)
-            image_bleedthrough = self.blend(image, image_bleed_offset, self.alpha)
+            image_bleedthrough = self.blend(image, image_bleed_offset)
 
             return image_bleedthrough

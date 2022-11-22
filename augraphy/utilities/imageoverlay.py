@@ -1,4 +1,5 @@
 import random
+from typing import Tuple
 
 import cv2
 import numpy as np
@@ -14,24 +15,20 @@ class ImageOverlay(Augmentation):
     be cut off by the edge of the background image.
 
     :param foreground: the image to overlay on the background document
-    :type foreground: np.array
     :param position: a pair of x and y coordinates to place the foreground image
         If not given, the foreground will be randomly placed.
-    :type position: pair of ints, optional
     :param p: the probability this augmentation will be applied
-    :type p: float, optional
     """
 
-    def __init__(self, foreground, position=(None, None), p=1):
+    def __init__(self, foreground: np.ndarray, position: Tuple[int, int] = None, p: float = 1):
         self.foreground = foreground
         self.position = position
         super().__init__(p=p)
 
-    def workspace(self, background):
+    def workspace(self, background: np.ndarray) -> np.ndarray:
         """Creates an empty image on which to do the overlay operation
 
         :param background: The background document image.
-        :type background: np.array
         """
 
         xdim = background.shape[0] + (2 * self.foreground.shape[0])
@@ -42,15 +39,12 @@ class ImageOverlay(Augmentation):
             cv2.COLOR_RGB2RGBA,
         )
 
-    def layerForeground(self, ambient, xloc, yloc):
+    def layerForeground(self, ambient: np.ndarray, xloc: int, yloc: int) -> np.ndarray:
         """Put self.foreground at (xloc,yloc) on ambient
 
         :param ambient: The initial ambient image.
-        :type ambient: np.array
         :param xloc: Coordinate of x start location.
-        :type xloc: int
         :param yloc: Coordinate of y start location.
-        :type yloc: int
         """
         xstop = xloc + self.foreground.shape[0]
         ystop = yloc + self.foreground.shape[1]
@@ -65,15 +59,12 @@ class ImageOverlay(Augmentation):
             )
         return ambient
 
-    def overlay(self, background, foreground):
+    def overlay(self, background: np.ndarray) -> np.ndarray:
         """Centers the background image over workspace, then places foreground
         somewhere on the workspace, and finally crops to the
         background dimension
 
         :param background: Background image of overlaying process.
-        :type background: np.array
-        :param foreground: Foreground image of overlaying process.
-        :type foreground: np.array
         """
 
         # Get the boundaries of the background image
@@ -88,7 +79,7 @@ class ImageOverlay(Augmentation):
         # Center the background image
         ambient[xstart:xstop, ystart:ystop] = background
 
-        if self.position == (None, None):
+        if self.position is None:
             # Choose somewhere to put the foreground
             xloc = random.randrange(0, xstop)
             yloc = random.randrange(0, ystop)
@@ -108,8 +99,9 @@ class ImageOverlay(Augmentation):
     def __repr__(self):
         repstring = "ImageOverlay(\n" f"foreground={self.foreground},\n" f"position={self.position},\n" f"p={self.p})"
 
-    def __call__(self, image, force=False):
-        image = image.copy
-        image = cv2.cvtColor(image, cv2.COLOR_RGB2RGBA)
-        overlaid = self.overlay(image, self.foreground)
-        return overlaid
+    def __call__(self, image: np.ndarray, force=False) -> np.ndarray:
+        if force or self.should_run():
+            image = image.copy
+            image = cv2.cvtColor(image, cv2.COLOR_RGB2RGBA)
+            overlaid = self.overlay(image)
+            return overlaid

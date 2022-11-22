@@ -1,4 +1,8 @@
-"""This module contains a class supporting composition of AugraphyPipelines"""
+from typing import List
+
+import numpy as np
+
+from augraphy.base.augmentationpipeline import AugraphyPipeline
 
 
 class ComposePipelines:
@@ -7,13 +11,12 @@ class ComposePipelines:
     ComposePipelines objects are callable on images (as numpy.ndarrays).
 
     :param pipelines: A list contains multiple augraphy.base.AugraphyPipeline.
-    :type pipelines: list or tuple
     """
 
-    def __init__(self, pipelines):
+    def __init__(self, pipelines: List[AugraphyPipeline]):
         self.pipelines = pipelines
 
-    def __call__(self, image):
+    def __call__(self, image: np.ndarray) -> dict:
 
         augmented_image = image.copy()
         newpipeline = dict()

@@ -1,3 +1,6 @@
+from typing import Tuple
+from typing import Union
+
 import cv2
 import numpy as np
 
@@ -9,18 +12,15 @@ class ColorPaper(Augmentation):
 
     :param hue_range: Pair of ints determining the range from which
            hue value is sampled.
-    :type hue_range: tuple, optional
     :param saturation_range: Pair of ints determining the range from which
            saturation value is sampled.
-    :type saturation_range: tuple, optional
-    :type p: float, optional
     """
 
     def __init__(
         self,
-        hue_range=(28, 45),
-        saturation_range=(10, 40),
-        p=1,
+        hue_range: Tuple[int, int] = (28, 45),
+        saturation_range: Tuple[int, int] = (10, 40),
+        p: float = 1,
     ):
         super().__init__(p=p)
         self.hue_range = hue_range
@@ -30,11 +30,10 @@ class ColorPaper(Augmentation):
     def __repr__(self):
         return f"ColorPaper(hue_range={self.hue_range}, saturation_range={self.saturation_range}, p={self.p})"
 
-    def add_color(self, image):
+    def add_color(self, image: np.ndarray) -> np.ndarray:
         """Add color background into input image.
 
         :param image: The image to apply the function.
-        :type image: numpy.array (numpy.uint8)
         """
 
         if len(image.shape) < 3:
@@ -57,7 +56,7 @@ class ColorPaper(Augmentation):
         return color_image
 
     # Applies the Augmentation to input data.
-    def __call__(self, image, layer=None, force=False):
+    def __call__(self, image: np.ndarray, force: bool = False) -> np.ndarray:
         if force or self.should_run():
             image = image.copy()
 

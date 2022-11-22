@@ -1,4 +1,6 @@
 import random
+from typing import Tuple
+from typing import Union
 
 import cv2
 import numpy as np
@@ -11,24 +13,19 @@ class Brightness(Augmentation):
 
     :param brightness_range: Pair of ints determining the range from which to sample
            the brightness shift.
-    :type brightness_range: tuple, optional
     :param min_brightness: Flag to enable min brightness intensity value in
             the augmented image.
-    :type min_brightness: int, optional
     :param min_brightness_value: Pair of ints determining the minimum
             brightness intensity of augmented image.
-    :type min_brightness_value: tuple, optional
-
     :param p: The probability that this Augmentation will be applied.
-    :type p: float, optional
     """
 
     def __init__(
         self,
-        brightness_range=(0.8, 1.4),
-        min_brightness=0,
-        min_brightness_value=(120, 150),
-        p=1,
+        brightness_range: Tuple[float, float] = (0.8, 1.4),
+        min_brightness: int = 0,
+        min_brightness_value: Tuple[int, int] = (120, 150),
+        p: float = 1,
     ):
         """Constructor method"""
         super().__init__(p=p)
@@ -41,7 +38,7 @@ class Brightness(Augmentation):
         return f"Brightness(brightness_range={self.brightness_range}, min_brightness={self.min_brightness}, min_brightness_value={self.min_brightness_value}, p={self.p})"
 
     # Applies the Augmentation to input data.
-    def __call__(self, image, layer=None, force=False):
+    def __call__(self, image: np.ndarray, force: bool = False) -> np.ndarray:
         if force or self.should_run():
             image = image.copy()
             value = random.uniform(self.brightness_range[0], self.brightness_range[1])

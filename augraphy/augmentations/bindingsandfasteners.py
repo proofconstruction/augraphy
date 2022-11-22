@@ -1,5 +1,7 @@
 import os
 import random
+from typing import Tuple
+from typing import Union
 
 import cv2
 import numpy as np
@@ -13,38 +15,29 @@ class BindingsAndFasteners(Augmentation):
     """Creates binding and fastener mark in the input image.
 
     :param overlay_types: Types of overlay method.
-    :type overlay_types: string
     :param foreground: Path to foreground image or the foreground image.
-    :type foreground: string or numpy array, optional
     :param effect_type: Types of binding effect, select from either
         "random", "punch_holes", binding_holes" or "clips".
-    :type effect_type: string, optional
     :param ntimes: Pair of ints to determine number of repetition to draw foreground image.
-    :type ntimes: tuple, optional
     :param nscales: Pair of floats to determine scale of foreground image size.
-    :type nscales: tuple, optional
     :param edge: Which edge of the page the foreground copies should be
         placed on.
-    :type edge: string, optional
     :param edge_offset: Pair of ints to determine how far from the edge of the page to draw the copies.
-    :type edge_offset: tuple, optional
     :param use_figshare_library: Flag to download foreground images from figshare library.
-    :type use_figshare_library: int, optional
     :param p: The probability this Augmentation will be applied.
-    :type p: float, optional
     """
 
     def __init__(
         self,
-        overlay_types="random",
-        foreground=None,
-        effect_type="random",
-        ntimes=(2, 6),
-        nscales=(1.0, 1.5),
-        edge="random",
-        edge_offset=(5, 20),
-        use_figshare_library=0,
-        p=1,
+        overlay_types: str = "random",
+        foreground: Union[np.ndarray, str] = None,
+        effect_type: str = "random",
+        ntimes: Tuple[int, int] = (2, 6),
+        nscales: Tuple[float, float] = (1.0, 1.5),
+        edge: str = "random",
+        edge_offset: Tuple[int, int] = (5, 20),
+        use_figshare_library: int = 0,
+        p: float = 1,
     ):
         """Constructor method"""
         super().__init__(p=p)
@@ -61,17 +54,19 @@ class BindingsAndFasteners(Augmentation):
     def __repr__(self):
         return f"BindingsAndFasteners(overlay_types={self.overlay_types}, foreground={self.foreground}, effect_type={self.effect_type}, ntimes={self.ntimes}, nscales={self.nscales}, edge={self.edge}, edge_offset={self.edge_offset}, use_figshare_library={self.use_figshare_library}, p={self.p})"
 
-    def add_noise(self, image, noise_probability, noise_value, max_input_value):
+    def add_noise(
+        self,
+        image: np.ndarray,
+        noise_probability: float,
+        noise_value: Tuple[int, int],
+        max_input_value: int,
+    ):
         """Add noise to input image.
 
         :param image: The image to apply the function.
-        :type image: numpy.array (numpy.uint8)
         :param noise_probability: The probability of applied noise.
-        :type noise_probability: float
         :param noise_value: The value of applied noise.
-        :type noise_value: tuple
         :param max_input_value: Maximum value of input to apply the noise effect.
-        :type max_input_value: int
         """
 
         noise = (
@@ -83,11 +78,10 @@ class BindingsAndFasteners(Augmentation):
         image_output = add_noise(image)
         return image_output
 
-    def create_foreground(self, image):
+    def create_foreground(self, image: np.ndarray):
         """Create foreground based on current input effect type.
 
         :param image: The image to apply the function.
-        :type image: numpy.array (numpy.uint8)
         """
 
         ysize, xsize = image.shape[:2]
@@ -378,7 +372,7 @@ class BindingsAndFasteners(Augmentation):
 
                 self.foreground.append(image_clip_bgr)
 
-    def retrieve_foreground(self):
+    def retrieve_foreground(self) -> None:
         """Retrieve template foreground based on current input effect type."""
 
         # Id for figshare published template files
@@ -409,7 +403,7 @@ class BindingsAndFasteners(Augmentation):
         self.foreground = cv2.imread(foreground_path)
 
     # Applies the Augmentation to input data.
-    def __call__(self, image, layer=None, force=False):
+    def __call__(self, image: np.ndarray, force: bool = False) -> np.ndarray:
         if force or self.should_run():
 
             # reset foreground when the same class instance called twice

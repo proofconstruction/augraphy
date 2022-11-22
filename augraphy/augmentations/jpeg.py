@@ -1,6 +1,8 @@
 import random
+from typing import Tuple
 
 import cv2
+import numpy as np
 
 from augraphy.base.augmentation import Augmentation
 
@@ -10,15 +12,13 @@ class Jpeg(Augmentation):
 
     :param quality_range: Pair of ints determining the range from which to
            sample the compression quality.
-    :type quality_range: tuple, optional
     :param p: The probability that this Augmentation will be applied.
-    :type p: float, optional
     """
 
     def __init__(
         self,
-        quality_range=(25, 95),
-        p=1,
+        quality_range: Tuple[int, int] = (25, 95),
+        p: float = 1,
     ):
         """Constructor method"""
         super().__init__(p=p)
@@ -29,7 +29,7 @@ class Jpeg(Augmentation):
         return f"Jpeg(quality_range={self.quality_range}, p={self.p})"
 
     # Applies the Augmentation to input data.
-    def __call__(self, image, layer=None, force=False):
+    def __call__(self, image: np.ndarray, force: bool = False) -> np.ndarray:
         if force or self.should_run():
             image = image.copy()
             encode_param = [

@@ -1,4 +1,7 @@
 import random
+from typing import Tuple
+
+import numpy as np
 
 from augraphy.augmentations.lowinkline import LowInkLine
 
@@ -9,26 +12,21 @@ class LowInkPeriodicLines(LowInkLine):
 
     :param count_range: Pair of ints determining the range from which to sample
            the number of lines to apply.
-    :type count_range: tuple, optional
     :param period_range: Pair of ints determining the range from which to sample
            the distance between lines.
-    :type period_range: tuple, optional
     :param use_consistent_lines: Whether or not to vary the width and alpha of
            generated low ink lines.
-    :type use_consistent_lines: bool, optional
     :param noise_probability: The probability to add noise into the generated lines.
-    :type noise_probability: float, optional
     :param p: The probability that this Augmentation will be applied.
-    :type p: float, optional
     """
 
     def __init__(
         self,
-        count_range=(2, 5),
-        period_range=(10, 30),
-        use_consistent_lines=True,
-        noise_probability=0.1,
-        p=1,
+        count_range: Tuple[int, int] = (2, 5),
+        period_range: Tuple[int, int] = (10, 30),
+        use_consistent_lines: bool = True,
+        noise_probability: float = 0.1,
+        p: float = 1,
     ):
         """Constructor method"""
         super().__init__(
@@ -43,17 +41,13 @@ class LowInkPeriodicLines(LowInkLine):
     def __repr__(self):
         return f"LowInkPeriodicLines(count_range={self.count_range}, period_range={self.period_range}, use_consistent_lines={self.use_consistent_lines}, p={self.p})"
 
-    def add_periodic_transparency_line(self, mask, line_count, offset, alpha):
+    def add_periodic_transparency_line(self, mask: np.ndarray, line_count: int, offset: int, alpha: int) -> None:
         """Creates horizontal lines of some opacity over the input image, at y-positions determined by the offset and line_count.
 
         :param mask: The image to apply the line to.
-        :type mask: numpy.array
         :param line_count: The number of lines to generate.
-        :type line_count: int
         :param offset: How far from the edge of the image to generate lines.
-        :type offset: int
         :param alpha: The opacity of the lines.
-        :type alpha: int
         """
         period = mask.shape[0] // line_count
 
@@ -63,16 +57,13 @@ class LowInkPeriodicLines(LowInkLine):
             ):  # period can't be zero here, else there would be zero division error
                 self.add_transparency_line(mask, y + offset, alpha)
 
-    def add_periodic_transparency_lines(self, mask, lines, line_periods):
+    def add_periodic_transparency_lines(self, mask: np.ndarray, lines: int, line_periods: int) -> None:
         """Creates horizontal lines of random opacity over the input image, at
         random intervals.
 
         :param mask: The image to apply the line to.
-        :type mask: numpy.array
         :param lines: How many lines to add to the image.
-        :type lines: int
         :param line_periods: The distance between lines.
-        :type line_periods: int
         """
         period = mask.shape[0] // line_periods
         self.add_periodic_transparency_line(
@@ -91,7 +82,7 @@ class LowInkPeriodicLines(LowInkLine):
             )
 
     # Applies the Augmentation to input data.
-    def __call__(self, image, layer=None, force=False):
+    def __call__(self, image: np.ndarray, force: bool = False) -> np.ndarray:
         if force or self.should_run():
             image = image.copy()
             count = random.randint(self.count_range[0], self.count_range[1])

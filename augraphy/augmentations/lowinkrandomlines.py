@@ -1,4 +1,7 @@
 import random
+from typing import Tuple
+
+import numpy as np
 
 from augraphy.augmentations.lowinkline import LowInkLine
 
@@ -8,22 +11,18 @@ class LowInkRandomLines(LowInkLine):
 
     :param count_range: Pair of ints determining the range from which the number
            of lines is sampled.
-    :type count_range: tuple, optional
     :param use_consistent_lines: Whether or not to vary the width and alpha of
            generated low ink lines.
-    :type use_consistent_lines: bool, optional
     :param noise_probability: The probability to add noise into the generated lines.
-    :type noise_probability: float, optional
     :param p: The probability this Augmentation will be applied.
-    :type p: float, optional
     """
 
     def __init__(
         self,
-        count_range=(5, 10),
-        use_consistent_lines=True,
-        noise_probability=0.1,
-        p=1,
+        count_range: Tuple[int, int] = (5, 10),
+        use_consistent_lines: bool = True,
+        noise_probability: float = 0.1,
+        p: float = 1,
     ):
         """Constructor method"""
         super().__init__(
@@ -38,7 +37,7 @@ class LowInkRandomLines(LowInkLine):
         return f"LowInkRandomLines(count_range={self.count_range}, use_consistent_lines={self.use_consistent_lines}, p={self.p})"
 
     # Applies the Augmentation to input data.
-    def __call__(self, image, layer=None, force=False):
+    def __call__(self, image: np.ndarray, force: bool = False) -> np.ndarray:
         if force or self.should_run():
             image = image.copy()
             count = random.randint(self.count_range[0], self.count_range[1])

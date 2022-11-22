@@ -4,7 +4,7 @@ Currently supported:
 1. Albumentations: https://github.com/albumentations-team/albumentations
 2. Imgaug: https://github.com/aleju/imgaug
 """
-import numpy
+import numpy as np
 
 from augraphy.base.augmentation import Augmentation
 
@@ -13,23 +13,20 @@ class ForeignAugmentation(Augmentation):
     """A wrapper for augmentations from other projects.
 
     :param foreignAugmentation: The fully-applied constructor for the foreign transform.
-    :type foreignAugmentation: object
     :param p: The probability that augmentation will be applied.
-    :type p: float, optional
     """
 
-    def __init__(self, foreignAugmentation, p=1):
+    def __init__(self, foreignAugmentation, p: float = 1):
         self.augmentation = foreignAugmentation
         super().__init__(p=p)
 
-    def __call__(self, image, layer=None, force=False):
-
+    def __call__(self, image: np.ndarray, force: bool = False) -> np.ndarray:
         image = image.copy()
         result = self.augmentation(image=image)
         output = self.handleForeignAugResult(result)
         return output
 
-    def handleForeignAugResult(*res):
+    def handleForeignAugResult(self, *res) -> np.ndarray:
         """The argument to this depends on the foreign augmentation applied.
         If an Albumentation augmentation is used, the result is a dict with the
         output image at key "image".

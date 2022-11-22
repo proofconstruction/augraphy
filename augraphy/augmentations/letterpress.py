@@ -1,4 +1,5 @@
 import random
+from typing import Tuple
 
 import cv2
 import numpy as np
@@ -11,33 +12,25 @@ class Letterpress(Augmentation):
     """Produces regions of ink mimicking the effect of ink pressed unevenly onto paper.
 
     :param n_samples: Pair of ints determining number of points in a cluster.
-    :type n_samples: tuple, optional
     :param n_clusters: Pair of ints determining number of clusters.
-    :type n_clusters: tuple, optional
     :param std_range: Pair of ints determining the range from which the
            standard deviation of the blob distribution is sampled.
-    :type std_range: tuple, optional
     :param value_range: Pair of ints determining the range from which the
            value of a point in the blob is sampled.
-    :type value_range: tuple, optional
     :param value_threshold_range: Min value of pixel to enable letterpress effect.
-    :type value_threshold_range: tuple, optional
     :param blur: Flag to enable blur in letterpress noise mask.
-    :type blur: int, optional
     :param p: The probability this Augmentation will be applied.
-    :type p: float, optional
-
     """
 
     def __init__(
         self,
-        n_samples=(300, 800),
-        n_clusters=(300, 800),
-        std_range=(1500, 5000),
-        value_range=(200, 255),
-        value_threshold_range=(128, 128),
-        blur=1,
-        p=1,
+        n_samples: Tuple[int, int] = (300, 800),
+        n_clusters: Tuple[int, int] = (300, 800),
+        std_range: Tuple[int, int] = (1500, 5000),
+        value_range: Tuple[int, int] = (200, 255),
+        value_threshold_range: Tuple[int, int] = (128, 128),
+        blur: int = 1,
+        p: float = 1,
     ):
         """Constructor method"""
         super().__init__(p=p)
@@ -51,7 +44,7 @@ class Letterpress(Augmentation):
     def __repr__(self):
         return f"Letterpress(n_samples={self.n_samples}, std_range={self.std_range}, value_range={self.value_range}, value_threshold_range={self.value_threshold_range}, blur={self.blur}, p={self.p})"
 
-    def __call__(self, image, layer=None, force=False):
+    def __call__(self, image: np.ndarray, force: bool = False) -> np.ndarray:
         if force or self.should_run():
             image = image.copy()
             ysize, xsize = image.shape[:2]

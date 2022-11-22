@@ -1,4 +1,5 @@
 import random
+from typing import Union
 
 import cv2
 import numpy as np
@@ -14,30 +15,18 @@ class PageBorder(Augmentation):
 
     :param side: One of the four sides of page i:e top,right,left,bottom,random.
                 By default it is "random"
-    :type side: string , optional
     :param border_background_value: Pair of ints determining the background value of border effect.
-    :type border_background_value: tuple, optional
     :param flip_border: Flag to choose whether the created border will be flipped or not.
-    :type flip_border: int, optional
     :param width_range: Pair of ints determining the width of the page border effect.
-    :type width_range: tuple, optional
     :param pages: An integer determining the number of page shadows in the border.
-    :type pages: int , optional
     :param noise_intensity_range: A pair of floats determining the intensity of
                                   noise being applied around the borders.
-    :type noise_intensity_range: tuple , optional
     :param curve_frequency: Number of curvy section in the generated shadow lines.
-    :type curve_frequency: tuple, optional
     :param curve_height: Height of curvy section in the generated shadow lines.
-    :type curve_height: tuple, optional
     :param curve_length_one_side: Length for one side of generated curvy section.
-    :type curve_length_one_side: tuple, optional
     :param value: Pair of ints determining intensity of generated shadow lines.
-    :type value: tuple, optional
     :param same_page_border: Flag to decide whether the added borders will be within the input image or not.
-    :type same_page_border: int, optional
     :param p: The probability this Augmentation will be applied.
-    :type p: float, optional
     """
 
     def __init__(
@@ -72,22 +61,7 @@ class PageBorder(Augmentation):
     def __repr__(self):
         return f"PageBorder(side={self.side}, border_background_value={self.border_background_value}, flip_border={self.flip_border}, width_range={self.width_range}, pages={self.pages}, noise_intensity_range={self.noise_intensity_range}, curve_frequency={self.curve_frequency}, curve_height={self.curve_height}, curve_length_one_side={self.curve_length_one_side}, value={self.value}, same_page_border={self.same_page_border}, p={self.p})"
 
-    def add_corner_noise(self, border, intensity=0.2):
-        """Add noise to the input border image.
-
-        :param border: The input border image.
-        :type boder: numpy.array (numpy.uint8)
-        :param intensity: Intensity of the noise.
-        :type intensity: float
-        """
-
-        ksize = (5, 5)
-        blur = cv2.blur(border, ksize)
-
-        # create edge in horizontal direction
-        edge = np.full((blur.shape[0], blur.shape[1]), fill_value=0, dtype="uint8")
-        if len(blur.shape) > 2:
-            blur = cv2.cvtColor(blur, cv2.COLOR_BGR2GRAY)
+    def add_line_noise(self, border: np.ndarray, edge: np.ndarray, blur: np.ndarray, intensity: float):
         # get dx
         edge[:, 1:] = blur[:, 1:] - blur[:, :-1]
         edge[:, :-1] += blur[:, :-1] - blur[:, 1:]
@@ -121,7 +95,24 @@ class PageBorder(Augmentation):
 
         return border
 
-    def random_folding(self, image):
+    def add_corner_noise(self, border, intensity=0.2):
+        """Add noise to the input border image.
+
+        :param border: The input border image.
+        :param intensity: Intensity of the noise.
+        """
+
+        ksize = (5, 5)
+        blur = cv2.blur(border, ksize)
+
+        # create edge in horizontal direction
+        edge = np.full((blur.shape[0], blur.shape[1]), fill_value=0, dtype="uint8")
+        if len(blur.shape) > 2:
+            blur = cv2.cvtColor(blur, cv2.COLOR_BGR2GRAY)
+
+        return self.add_line_noise(border, edge, blur, intensity)
+
+    def random_folding(self, image: np.ndarray) -> np.ndarray:
         """Create random folding effect at the image border."""
 
         # rotate image due to folding algorithm process image in another direction
@@ -177,24 +168,19 @@ class PageBorder(Augmentation):
 
     def create_border(
         self,
-        channel,
-        border_width,
-        border_height,
-        num_pages=None,
-        noise_intensity=0.2,
-    ):
+        channel: int,
+        border_width: int,
+        border_height: int,
+        num_pages: Union[int, None] = None,
+        noise_intensity: float = 0.2,
+    ) -> np.ndarray:
         """Create image with border of pages effect.
 
         :param channel: Channel number of border image.
-        :type channel: int
         :param border_width: Width of the border image.
-        :type border_width: int
         :param border_height: Height of border image.
-        :type border_height: int
         :param num_pages: Number of pages in border effect.
-        :type num_pages: int
         :param noise_intensity: Intensity of the noise.
-        :type noise_intensity: float
         """
 
         if channel > 2:
@@ -211,9 +197,14 @@ class PageBorder(Augmentation):
         # initialize border image
         border_background_value = max(
             1,
-            random.randint(self.border_background_value[0], self.border_background_value[1]),
+            random.randint(
+                self.border_background_value[0],
+                self.border_background_value[1],
+            ),
         )
-        border_merged = np.full_like(border, fill_value=border_background_value).astype("uint8")
+        border_merged = np.full_like(border, fill_value=border_background_value).astype(
+            "uint8",
+        )
         for x in np.linspace(border_width, 0, num_pages):
 
             # create a copy of image
@@ -267,12 +258,9 @@ class PageBorder(Augmentation):
             # merge borders
             border_merged = np.minimum(border_merged, border_single)
 
-        # blur the final merged image
-        border_merged = cv2.blur(border_merged, (3, 3))
-
         return border_merged
 
-    def __call__(self, image, layer=None, force=False):
+    def __call__(self, image: np.ndarray, force: bool = False) -> np.ndarray:
         if force or self.should_run():
             image = image.copy()
 
@@ -303,6 +291,9 @@ class PageBorder(Augmentation):
                 self.pages,
                 noise_intensity,
             )
+
+            # blur the generated border
+            border = cv2.blur(border, (3, 3))
 
             # create output border image
             if self.same_page_border:

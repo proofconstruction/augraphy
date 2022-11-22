@@ -1,6 +1,3 @@
-################################################################################
-# File: lowinkline.py
-#
 import random
 
 import cv2
@@ -14,18 +11,15 @@ class LowInkLine(Augmentation):
 
     :param use_consistent_lines: Whether or not to vary the width and alpha of
            generated low ink lines.
-    :type use_consistent_lines: bool, optional
     :param noise_probability: The probability to add noise into the generated lines.
-    :type noise_probability: float, optional
     :param p: The probability this Augmentation will be applied.
-    :type p: float, optional
     """
 
     def __init__(
         self,
-        use_consistent_lines=True,
-        noise_probability=0.1,
-        p=1,
+        use_consistent_lines: bool = True,
+        noise_probability: float = 0.1,
+        p: float = 1,
     ):
         """Constructor method"""
         super().__init__(p=p)
@@ -39,15 +33,12 @@ class LowInkLine(Augmentation):
     # Takes an image, a vertical position, and an opacity value,
     # then adds a line at that position in the image with the given
     # opacity.
-    def add_transparency_line(self, mask, y, alpha=None):
+    def add_transparency_line(self, mask: np.ndarray, y: int, alpha: int = None) -> np.ndarray:
         """Adds a line with some opacity at a vertical position in the image.
 
         :param mask: The image to apply the line to.
-        :type mask: numpy.array
         :param y: The vertical position to apply the line at.
-        :type y: int
         :param alpha: The desired opacity of the line.
-        :type alpha: int, optional
         """
         ysize, xsize = mask.shape[:2]
 

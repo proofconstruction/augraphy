@@ -13,22 +13,16 @@ class PencilScribbles(Augmentation):
 
     :param size_range: Pair of floats determining the range for
            the size of the scribble to be created
-    :type size_range: tuple, optional
     :param count_range: Pair of floats determining the range for
            the number of scribbles to create.
-    :type count_range: tuple, optional
     :param stroke_count_range: Pair of floats determining the range for
            the number of strokes to create in each scribble.
-    :type stroke_count_range: tuple, optional
     :param thickness_range: Pair of floats determining the range for
            the size of the scribbles to create.
-    :type thickness_range: tuple, optional
     :param brightness_change: Value change for the brightness of
            the strokes. Default 128 creates a graphite-like appearance.
            32 creates a charcoal-like appearance.
-    :type brightness_change: int, optional
     :param p: Probability of this Augmentation being applied.
-    :type p: float, optional
     """
 
     def __init__(
@@ -56,9 +50,7 @@ class PencilScribbles(Augmentation):
         """Apply image with pencil strokes to background image.
 
         :param stroke_image: Image with pencil strokes.
-        :type stroke_image: numpy.array (numpy.uint8)
         :param image: The background image.
-        :type image: numpy.array (numpy.uint8)
         """
         apply_mask_fn = lambda x, y: y if (x < 64) else x
         apply_mask = np.vectorize(apply_mask_fn)
@@ -90,9 +82,7 @@ class PencilScribbles(Augmentation):
         """Create scribbles of pencil strokes in an image.
 
         :param max_height: Maximum height of scribble effect.
-        :type max_height: int
         :param max_width: Maximum width of scribble effect.
-        :type max_width: int
         """
         size = random.randint(max(self.size_range[0], 30), max(40, self.size_range[1]))
         size = min([size, max_height, max_width])
@@ -153,13 +143,11 @@ class PencilScribbles(Augmentation):
 
         return strokes_img
 
-    def random_paste(self, paste, target):
+    def random_paste(self, paste: np.ndarray, target: np.ndarray) -> np.ndarray:
         """Randomly paste image to another image.
 
         :param paste: Image for the paste effect.
-        :type paste: numpy.array (numpy.uint8)
         :param target: The image to be pasted.
-        :type target: numpy.array (numpy.uint8)
         """
 
         target_shape_length = len(target.shape)
@@ -183,7 +171,7 @@ class PencilScribbles(Augmentation):
         return target
 
     # Applies the Augmentation to input data.
-    def __call__(self, image, layer=None, force=False):
+    def __call__(self, image: np.ndarray, force: bool = False) -> np.ndarray:
         if force or self.should_run():
             image = image.copy()
 

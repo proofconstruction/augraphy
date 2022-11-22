@@ -2,6 +2,8 @@ import math
 import os
 import random
 from pathlib import Path
+from typing import List
+from typing import Tuple
 
 import cv2
 import numpy as np
@@ -19,36 +21,27 @@ class Markup(Augmentation):
     """Uses contours detection to detect text lines and add a smooth text strikethrough, highlight or underline effect.
 
     :param num_lines_range: Pair of ints determining the number of added markup effect.
-    :type num_lines_range: int tuple, optional
     :param markup_length_range: Pair of floats between 0 to 1 , to determine the length of added markup effect.
-    :type markup_length_range: float tuple, optional
     :param markup_thickness_range: Pair of ints, to determine the thickness of added markup effect.
-    :type markup_thickness_range: int tuple, optional
     :param markup_type: Choice of markup "strikethrough", "highlight", "underline" or "crossed".
-    :type markup_type: string
     :param markup_color: BGR color tuple.
-    :type markup_color: tuple or string
     :param repetitions: Determine how many time a single markup effect should be drawn.
-    :type repetitions: int
     :param large_word_mode: Set true to draw markup on large words, else large word will be ignored.
-    :type large_word_mode: boolean
     :param single_word_mode: Set true to draw markup on a single word only.
-    :type single_word_mode: boolean
     :param p: The probability that this Augmentation will be applied.
-    :type p: float, optional
     """
 
     def __init__(
         self,
-        num_lines_range=(2, 7),
-        markup_length_range=(0.5, 1),
-        markup_thickness_range=(1, 3),
-        markup_type="strikethrough",
-        markup_color="random",
-        large_word_mode=True,
-        single_word_mode=False,
-        repetitions=1,
-        p=1,
+        num_lines_range: Tuple[int, int] = (2, 7),
+        markup_length_range: Tuple[float, float] = (0.5, 1),
+        markup_thickness_range: Tuple[int, int] = (1, 3),
+        markup_type: str = "strikethrough",
+        markup_color: str = "random",
+        large_word_mode: bool = True,
+        single_word_mode: bool = False,
+        repetitions: int = 1,
+        p: float = 1,
     ):
 
         super().__init__(p=p)
@@ -69,15 +62,17 @@ class Markup(Augmentation):
             f"large_word_mode={self.large_word_mode}, single_word_mode={self.single_word_mode}, p={self.p})"
         )
 
-    def distribute_line(self, starting_point, ending_point, offset):
+    def distribute_line(
+        self,
+        starting_point: Tuple[int, int],
+        ending_point: Tuple[int, int],
+        offset: int,
+    ) -> List[Tuple[int, int]]:
         """Create smoothed line from the provided starting and ending point.
 
         :param starting_point: Starting point (x, y) of the line.
-        :type starting_point: tuple
         :param ending_point: Ending point (x, y) of the line.
-        :type ending_point: tuple
         :param offset: Offset value to randomize point position.
-        :type offset: int
         """
 
         points_count = random.randint(3, 6)  # dividing the line into points
@@ -89,7 +84,7 @@ class Markup(Augmentation):
         )  # adding a smoothing effect in points using chaikin's algorithm
         return points
 
-    def _preprocess(self, image):
+    def _preprocess(self, image: np.ndarray) -> np.ndarray:
         """Preprocess image with binarization, dilation and erosion."""
         blurred = cv2.blur(image, (5, 5))
         blurred = blurred.astype("uint8")
@@ -126,19 +121,21 @@ class Markup(Augmentation):
 
         return dilation
 
-    def draw_line(self, p1, p2, markup_mask, markup_thickness, reverse):
+    def draw_line(
+        self,
+        p1: Tuple[int, int],
+        p2: Tuple[int, int],
+        markup_mask: np.ndarray,
+        markup_thickness: int,
+        reverse: int,
+    ) -> None:
         """Draw line across two provided points.
 
         :param p1: Starting point (x, y) of the line.
-        :type p1: tuple
         :param p2: Ending point (x, y) of the line.
-        :type p2: tuple
         :param markup_mask: Mask of markup effect.
-        :type markup_mask: numpy.array (numpy.uint8)
         :param markup_thickness: Thickness of the line.
-        :type markup_thickness: int
         :param reverse: Reverse the order of line points distribution.
-        :type reverse: int
         """
 
         # get min and max of points
@@ -177,7 +174,7 @@ class Markup(Augmentation):
                 lineType=cv2.LINE_AA,
             )
 
-    def __call__(self, image, layer=None, force=False):
+    def __call__(self, image: np.ndarray, force: bool = False) -> np.ndarray:
 
         # change to 3 channels BGR format
         if len(image.shape) < 3:

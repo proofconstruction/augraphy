@@ -1,3 +1,6 @@
+from typing import List
+from typing import Tuple
+
 import numpy as np
 
 from augraphy.base.augmentation import Augmentation
@@ -8,18 +11,15 @@ class Dithering(Augmentation):
     Applies Ordered or Floyd Steinberg dithering to the input image.
 
     :param dither: Types of dithering, ordered or Floyd Steinberg dithering.
-    :type dither: string, optional
     :param order: Order number for ordered dithering.
-    :type order: int, optional
     :param p: The probability this Augmentation will be applied.
-    :type p: float, optional
     """
 
     def __init__(
         self,
-        dither="ordered",
-        order=5,
-        p=1,
+        dither: str = "ordered",
+        order: int = 5,
+        p: float = 1,
     ):
         super().__init__(p=p)
         self.dither = dither
@@ -29,15 +29,12 @@ class Dithering(Augmentation):
     def __repr__(self):
         return f"Dithering(dither={self.dither}, p={self.p})"
 
-    def apply_Floyd_Steinberg(self, image, ysize, xsize):
+    def apply_Floyd_Steinberg(self, image: np.ndarray, ysize: int, xsize: int) -> np.ndarray:
         """Run Floyd Steinberg dithering algorithm to the input image.
 
         :param image: The image to apply the function.
-        :type image: numpy.array (numpy.uint8)
         :param ysize: Height of image.
-        :type ysize: int
         :param xsize: Width of image.
-        :type xsize: int
         """
 
         for y in range(1, ysize - 1):
@@ -52,12 +49,10 @@ class Dithering(Augmentation):
                 image[y + 1, x + 1] += quant_error * (1 / 16)
         return image.astype("uint8")
 
-    # Floyd Steinberg dithering
-    def dither_Floyd_Steinberg(self, image):
+    def dither_Floyd_Steinberg(self, image: np.ndarray) -> np.ndarray:
         """Apply Floyd Steinberg dithering to the input image.
 
         :param image: The image to apply the function.
-        :type image: numpy.array (numpy.uint8)
         """
 
         if len(image.shape) > 2:  # coloured image
@@ -76,20 +71,14 @@ class Dithering(Augmentation):
 
         return img_dither_fs.astype("uint8")
 
-    # Apply ordered dithering algorithm
-    def apply_Ordered(self, image, ysize, xsize, order, ordered_matrix):
+    def apply_Ordered(self, image: np.ndarray, ysize: int, xsize: int, order: int, ordered_matrix: List[List[int]]):
         """Run ordered dithering algorithm to the input image.
 
         :param image: The image to apply the function.
-        :type image: numpy.array (numpy.uint8)
         :param ysize: Height of image.
-        :type ysize: int
         :param xsize: Width of image.
-        :type xsize: int
         :param order: Order number of ordered dithering.
-        :type order: int
         :param ordered_matrix: Ordered matrix for ordered dithering algorithm.
-        :type ordered_matrix: list
         """
 
         for y in range(ysize):
@@ -102,14 +91,11 @@ class Dithering(Augmentation):
                     image[y, x] = 0
         return image.astype("uint8")
 
-    def dither_Ordered(self, image, order=5):
+    def dither_Ordered(self, image: np.ndarray, order: int = 5) -> np.ndarray:
         """Apply ordered dithering to the input image.
 
         :param image: The image to apply the function.
-        :type image: numpy.array (numpy.uint8)
         :param order: Order number of the ordered dithering.
-        :type order: int
-
         """
         # create bayer matrix based on the order
         ordered_matrix = self.create_bayer(0, 0, 2 ** (order), 0, 1)
@@ -143,24 +129,24 @@ class Dithering(Augmentation):
 
         return img_dither_ordered.astype("uint8")
 
-        return img_dither_ordered
-
     # Adapted from https://github.com/tromero/BayerMatrix
-    def create_bayer(self, x, y, size, value, step, matrix=[[]]):
+    def create_bayer(
+        self,
+        x: int,
+        y: int,
+        size: int,
+        value: int,
+        step: int,
+        matrix: List[List[int]] = [[]],
+    ) -> List[List[int]]:
         """Function to create ordered matrix.
 
         :param x: The x coordinate of current step.
-        :type x: int
         :param y: The y coordinate of current step.
-        :type y: int
         :param size: Size of ordered matrix.
-        :type size: int
         :param value: Value of current step.
-        :type value: int
         :param step: Current step value.
-        :type step: int
         :param _matrix: The ordered matrix for ordered dithering algorithm.
-        :type matrix: list
         """
         if matrix == [[]]:
             matrix = [[0 for i in range(size)] for i in range(size)]
@@ -184,7 +170,7 @@ class Dithering(Augmentation):
         return matrix
 
     # Applies the Augmentation to input data.
-    def __call__(self, image, layer=None, force=False):
+    def __call__(self, image: np.ndarray, force: bool = False) -> np.ndarray:
         if force or self.should_run():
             image = image.copy()
             if self.dither == "ordered":

@@ -1,4 +1,5 @@
 import random
+from typing import Tuple
 
 import cv2
 import numpy as np
@@ -13,48 +14,35 @@ class BadPhotoCopy(Augmentation):
     """Uses added noise to generate an effect of dirty copier.
 
     :param mask: Mask of noise to generate badphotocopy effect.
-    :type mask: uint8, optional
     :param noise_type: Types of noises to generate different mask patterns. Use -1 to select randomly.
-    :type noise_type: int, optional
     :param noise_side: Location of noise.
-    :type noise_side: string, optional
     :param noise_iteration: Pair of ints to determine number of iterations to apply noise in the mask.
-    :type noise_iteration: tuple, optional
     :param noise_size: Pair of ints to determine scale of noise in the mask.
-    :type noise_size: tuple, optional
     :param noise_value: Intensity range of noise, lower value get darker effect.
-    :type noise_value: tuple, optional
     :param noise_sparsity: Pair of floats determining sparseness of noise.
-    :type noise_sparsity: tuple, optional
     :param noise_concentration: Pair of floats determining concentration of noise.
-    :type noise_concentration: tuple, optional
     :param blur_noise: Flag to enable blur in noise mask. Use -1 to select randomly.
-    :type blur_noise: int, optional
     :param blur_noise_kernel: Kernel to blur noise mask.
-    :type blur_noise_kernel: tuple, optional
     :param wave_pattern: To enable wave pattern in noise. Use -1 to select randomly.
-    :type wave_pattern: int, optional
     :param edge_effect: To add sobel edge effect into the noise mask. Use -1 to select randomly.
-    :type edge_effect: int, optional
     :param p: The probability this Augmentation will be applied.
-    :type p: float, optional
     """
 
     def __init__(
         self,
-        mask=None,
-        noise_type=-1,
-        noise_side="random",
-        noise_iteration=(2, 5),
-        noise_size=(1, 3),
-        noise_value=(0, 64),
-        noise_sparsity=(0.1, 0.9),
-        noise_concentration=(0.1, 0.6),
-        blur_noise=-1,
-        blur_noise_kernel=(5, 5),
-        wave_pattern=-1,
-        edge_effect=-1,
-        p=1,
+        mask: np.ndarray = None,
+        noise_type: int = -1,
+        noise_side: str = "random",
+        noise_iteration: Tuple[int, int] = (2, 5),
+        noise_size: Tuple[int, int] = (1, 3),
+        noise_value: Tuple[int, int] = (0, 64),
+        noise_sparsity: Tuple[float, float] = (0.1, 0.9),
+        noise_concentration: Tuple[float, float] = (0.1, 0.6),
+        blur_noise: int = -1,
+        blur_noise_kernel: Tuple[int, int] = (5, 5),
+        wave_pattern: int = -1,
+        edge_effect: int = -1,
+        p: float = 1,
     ):
         """Constructor method"""
         super().__init__(p=p)
@@ -91,11 +79,10 @@ class BadPhotoCopy(Augmentation):
     def __repr__(self):
         return f"BadPhotoCopy(mask={self.mask}, noise_type={self.noise_type}, noise_side={self.noise_side}, noise_iteration={self.noise_iteration}, noise_size={self.noise_size}, noise_value={self.noise_value}, noise_sparsity={self.noise_sparsity}, noise_concentration={self.noise_concentration}, blur_noise={self.blur_noise}, blur_noise_kernel={self.blur_noise_kernel}, wave_pattern={self.wave_pattern}, edge_effect={self.edge_effect}, p={self.p})"
 
-    def apply_wave(self, mask):
-        """applies wavy pattern mask to input mask.
+    def apply_wave(self, mask: np.ndarray) -> np.ndarray:
+        """Applies a wavy pattern mask to the input mask.
 
-        :param mask: The image to apply the function.
-        :type mask: numpy.array (numpy.uint8)
+        :param mask: The image to apply the function to.
         """
 
         # rescale mask from 0 to 255
@@ -198,11 +185,10 @@ class BadPhotoCopy(Augmentation):
 
         return mask
 
-    def apply_augmentation(self, image):
-        """applies augmentation to the input image.
+    def apply_augmentation(self, image: np.ndarray) -> np.ndarray:
+        """Applies augmentation to the input image.
 
-        :param image: The image to apply the augmentation.
-        :type image: numpy.array (numpy.uint8)
+        :param image: The image to apply the augmentation to.
         """
 
         image_shape_length = len(image.shape)
@@ -326,7 +312,7 @@ class BadPhotoCopy(Augmentation):
         return result.astype("uint8")
 
     # Applies the Augmentation to input data.
-    def __call__(self, image, layer=None, force=False):
+    def __call__(self, image: np.ndarray, force: bool = False) -> np.ndarray:
         if force or self.should_run():
             result = image.copy()
             result = self.apply_augmentation(image)

@@ -1,4 +1,6 @@
 import random
+from typing import List
+from typing import Tuple
 
 import cv2
 import numpy as np
@@ -13,13 +15,11 @@ class NoiseGenerator:
         2 = noise with regular pattern
         3 = noise at all borders of image
         4 = sparse and little noise
-    :type noise_type: int, optional
     :param noise_side: Location of generated noise. Choose from:
         "random", "left", "right", "top", "bottom","top_left", "top_right", "bottom_left", "bottom_right".
-    :type noise_side: string, optional
     """
 
-    def __init__(self, noise_type=1, noise_side=None):
+    def __init__(self, noise_type: int = 1, noise_side: str = None):
         self.noise_type = noise_type
         self.noise_side = noise_side
         self.sides = [
@@ -41,13 +41,11 @@ class NoiseGenerator:
         if self.noise_side not in self.sides:
             self.noise_side = "random"
 
-    def generate_clusters_and_samples(self, noise_concentration, max_size):
+    def generate_clusters_and_samples(self, noise_concentration: Tuple[float, float], max_size: int) -> List[int]:
         """Generate number of noise clusters and number of samples in each noise cluster.
 
         :param noise_concentration: Pair of floats determining concentration of noise.
-        :type noise_concentration: tuple
         :param max_size: Maximum between width and height of image.
-        :type max_size: int
         """
 
         if self.noise_type == 4:
@@ -78,17 +76,13 @@ class NoiseGenerator:
 
         return n_samples_array
 
-    def generate_sparsity_std(self, noise_sparsity, xsize, ysize, max_size):
+    def generate_sparsity_std(self, noise_sparsity: Tuple[float, float], xsize: int, ysize: int, max_size: int):
         """Generate standard deviation(std) to control the sparsity of the noise.
 
         :param noise_sparsity: Pair of floats determining sparseness of noise.
-        :type noise_sparsity: tuple
         :param xsize: Width of image.
-        :type xsize: int
         :param ysize: Height of image.
-        :type ysize: int
         :param max_size: Maximum between width and height of image.
-        :type max_size: int
         """
 
         if self.noise_type == 2:
@@ -148,21 +142,23 @@ class NoiseGenerator:
 
         return std, center_x, center_y
 
-    def generate_points(self, n_samples_array, std, center_x, center_y, xsize, ysize):
+    def generate_points(
+        self,
+        n_samples_array: List[int],
+        std: int,
+        center_x: int,
+        center_y: int,
+        xsize: int,
+        ysize: int,
+    ):
         """Generate x&y coordinates of noise.
 
         :param n_samples_array: List contains number of points sample for each cluster.
-        :type n_samples_array: list
         :param std: Standard deviation to determine sparseness of generated points.
-        :type std: int
         :param center_x: Center x of the generated noises.
-        :type center_x: int
         :param center_y: Center y of the generated noises.
-        :type center_y: int
         :param xsize: Width of image.
-        :type xsize: int
         :param ysize: Height of image.
-        :type ysize: int
         """
         # generate clusters of blobs
         if self.noise_type == 3:
@@ -276,27 +272,21 @@ class NoiseGenerator:
 
     def generate_mask(
         self,
-        noise_background,
-        noise_value,
-        generated_points_x,
-        generated_points_y,
-        xsize,
-        ysize,
+        noise_background: Tuple[int, int],
+        noise_value: Tuple[int, int],
+        generated_points_x: np.ndarray,
+        generated_points_y: np.ndarray,
+        xsize: int,
+        ysize: int,
     ):
         """Generate mask of noise.
 
         :param noise_background: Tuple of ints to determine background value of mask.
-        :type noise_background: tuple
         :param noise_value: Tuple of ints to determine value of noise.
-        :type noise_value: tuple
         :param generated_points_x: x point value of noise.
-        :type generated_points_x: numpy array
         :param generated_points_y: y point value of noise.
-        :type generated_points_y: numpy array
         :param xsize: Width of image.
-        :type xsize: int
         :param ysize: Height of image.
-        :type ysize: int
         """
 
         # background of noise mask
@@ -324,27 +314,21 @@ class NoiseGenerator:
 
     def generate_mask_main(
         self,
-        noise_value,
-        noise_background,
-        noise_sparsity,
-        noise_concentration,
-        xsize,
-        ysize,
+        noise_value: Tuple[int, int],
+        noise_background: Tuple[int, int],
+        noise_sparsity: Tuple[float, float],
+        noise_concentration: Tuple[float, float],
+        xsize: int,
+        ysize: int,
     ):
         """Main function to generate mask of noise in each iteration.
 
         :param noise_value: Tuple of ints to determine value of noise.
-        :type noise_value: tuple
         :param noise_background: Tuple of ints to determine background value of mask.
-        :type noise_background: tuple
         :param noise_sparsity: Pair of floats determining sparseness of noise.
-        :type noise_sparsity: tuple, optional
         :param noise_concentration: Pair of floats determining concentration of noise.
-        :type noise_concentration: tuple, optional
         :param xsize: Width of image.
-        :type xsize: int
         :param ysize: Height of image.
-        :type ysize: int
         """
 
         # get max of y or x size
@@ -485,33 +469,25 @@ class NoiseGenerator:
 
     def generate_noise(
         self,
-        noise_iteration=(1, 1),
-        noise_size=(1, 1),
-        noise_value=(0, 128),
-        noise_background=(255, 255),
-        noise_sparsity=(0.4, 0.6),
-        noise_concentration=(0.4, 0.6),
-        xsize=1500,
-        ysize=1500,
+        noise_iteration: Tuple[int, int] = (1, 1),
+        noise_size: Tuple[int, int] = (1, 1),
+        noise_value: Tuple[int, int] = (0, 128),
+        noise_background: Tuple[int, int] = (255, 255),
+        noise_sparsity: Tuple[int, int] = (0.4, 0.6),
+        noise_concentration: Tuple[int, int] = (0.4, 0.6),
+        xsize: int = 1500,
+        ysize: int = 1500,
     ):
         """Main function to generate noise.
 
         :param noise_iteration: Pair of ints to determine number of iterations to apply noise in the mask.
-        :type noise_type: tuple, optional
         :param noise_size: Pair of ints to determine scale of noise in the mask.
-        :type noise_size: tuple, optional
         :param noise_value: Pair of ints determining value of noise.
-        :type noise_value: tuple, optional
         :param noise_background: Pair of ints determining value of noise background.
-        :type noise_background: tuple, optional
         :param noise_sparsity: Pair of floats determining sparseness of noise.
-        :type noise_sparsity: tuple, optional
         :param noise_concentration: Pair of floats determining concentration of noise.
-        :type noise_concentration: tuple, optional
         :param xsize: Number of columns in generated mask of noise.
-        :type xsize: int, optional
         :param ysize: Number of rows in generated mask of noise.
-        :type ysize: int, optional
         """
 
         # generate random iterations

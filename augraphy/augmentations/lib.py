@@ -1,5 +1,8 @@
 """This module contains functions generally useful for building augmentations."""
 import random
+from typing import List
+from typing import Tuple
+from typing import Union
 
 import cv2
 import numpy as np
@@ -16,7 +19,7 @@ from skimage.filters import threshold_yen
 from sklearn.datasets import make_blobs
 
 
-def rotate_image(mat, angle):
+def rotate_image(mat: np.ndarray, angle: int) -> np.ndarray:
     """Rotates an image (angle in degrees) and expands image to avoid
     cropping.
     """
@@ -48,8 +51,8 @@ def rotate_image(mat, angle):
     return rotated_mat
 
 
-# Generate average intensity value
-def generate_average_intensity(image):
+def generate_average_intensity(image: np.ndarray) -> Union[np.ndarray, float]:
+    # Generate average intensity value
     # Adapted from this discussion
     # https://stackoverflow.com/questions/14243472/estimate-brightness-of-an-image-opencv/22020098#22020098
     if len(image.shape) > 2:
@@ -60,8 +63,8 @@ def generate_average_intensity(image):
         return np.average(image)
 
 
-# Generate noise to edges of folding
-def add_folding_noise(img, side, p=0.1):
+def add_folding_noise(img: np.ndarray, side: int, p: float = 0.1) -> np.ndarray:
+    # Generate noise to edges of folding
     # side = flag to put more noise at certain side
     #   0  = left side
     #   1  = right side
@@ -83,7 +86,13 @@ def add_folding_noise(img, side, p=0.1):
 
 
 # Perspective transform based on 4 points
-def four_point_transform(image, pts, dst, xs, ys):
+def four_point_transform(
+    image: np.ndarray,
+    pts: Tuple[int, int, int, int],
+    dst: Tuple[int, int, int, int],
+    xs,
+    ys,
+) -> np.ndarray:
     M = cv2.getPerspectiveTransform(pts, dst)
     if not isinstance(image, np.floating):
         image = image.astype("float")
@@ -94,13 +103,13 @@ def four_point_transform(image, pts, dst, xs, ys):
 
 # Transform left side of folding area
 def warp_fold_left_side(
-    img,
-    ysize,
-    fold_noise,
-    fold_x,
-    fold_width_one_side,
-    fold_y_shift,
-):
+    img: np.ndarray,
+    ysize: int,
+    fold_noise: float,
+    fold_x: int,
+    fold_width_one_side: int,
+    fold_y_shift: int,
+) -> np.ndarray:
 
     img_fuse = img.copy()
 
@@ -168,13 +177,13 @@ def warp_fold_left_side(
 
 # Transform right side of folding area
 def warp_fold_right_side(
-    img,
-    ysize,
-    fold_noise,
-    fold_x,
-    fold_width_one_side,
-    fold_y_shift,
-):
+    img: np.ndarray,
+    ysize: int,
+    fold_noise: float,
+    fold_x: int,
+    fold_width_one_side: int,
+    fold_y_shift: int,
+) -> np.ndarray:
 
     img_fuse = img.copy()
 
@@ -240,10 +249,9 @@ def warp_fold_right_side(
     return img_fuse
 
 
-def chaikin(points):
+def chaikin(points: List[Tuple[int, int]]) -> List[Tuple[int, int]]:
     """
-    :param points: a list of more than 2 points, where each point is a tuple/array of len=2
-    :type points: array
+    :param points: a list of more than 2 points, where each point is a pair of ints
     """
     # appending the first point in path
     path = [points[0]]
@@ -265,62 +273,56 @@ def chaikin(points):
     return path
 
 
-def smooth(points, iter):
+def smooth(points: List[Tuple[int, int]], iter: int) -> List[Tuple[int, int]]:
     """
-    :param points: a list of more than 2 points, where each point is a tuple/array of len=2
-    :type points: array
+    :param points: a list of more than 2 points, where each point is a pair of ints
     :param iter: number of times to apply chaikin algorithm
-    :type iter: int
-    :return:
     """
     for i in range(iter):
         points = chaikin(points)
     return points
 
 
-def add_noise(image, intensity_range=(0.1, 0.2), color_range=(0, 224)):
+def add_noise(
+    image: np.ndarray,
+    intensity_range: Tuple[float, float] = (0.1, 0.2),
+    color_range: Tuple[float, float] = (0, 224),
+) -> np.ndarray:
     """Applies random noise to the input image.
 
     :param image: The image to noise.
-    :type image: numpy.array
     :param intensity_range: Pair of bounds for intensity sample.
-    :type intensity_range: tuple, optional
     :param color_range: Pair of bounds for 8-bit colors.
-    :type color_range: tuple, optional
     """
 
     intensity = random.uniform(intensity_range[0], intensity_range[1])
-    noise = lambda x: random.randint(color_range[0], color_range[1]) if (x == 0 and random.random() < intensity) else x
-    add_noise = np.vectorize(noise)
+    add_noise_fn = np.vectorize(
+        lambda x: random.randint(color_range[0], color_range[1]) if (x == 0 and random.random() < intensity) else x,
+    )
 
-    return add_noise(image)
+    return add_noise_fn(image)
 
 
 def _create_blob(
-    size_range=(10, 20),
-    points_range=(5, 25),
-    std_range=(10, 75),
-    features_range=(15, 25),
-    value_range=(180, 250),
-):
+    size_range: Tuple[int, int] = (10, 20),
+    points_range: Tuple[int, int] = (5, 25),
+    std_range: Tuple[int, int] = (10, 75),
+    features_range: Tuple[int, int] = (15, 25),
+    value_range: Tuple[int, int] = (180, 250),
+) -> np.ndarray:
     """Generates a Gaussian noise blob for placement in an image.
     To be used with _apply_blob()
 
     :param size_range: Pair of ints determining the range from which the
            diameter of a blob is sampled.
-    :type size_range: tuple, optional
     :param points_range: Pair of ints determining the range from which the
            number of points in a blob is sampled.
-    :type points_range: tuple, optional
     :param std_range: Pair of ints determining the range from which the
            standard deviation of the blob distribution is sampled.
-    :type std_range: tuple, optional
     :param features_range: Pair of ints determining the range from which the
            number of features in the blob is sampled.
-    :type features_range: tuple, optional
     :param value_range: Pair of ints determining the range from which the
            value of a point in the blob is sampled.
-    :type value_range: tuple, optional
     """
     size = random.randint(size_range[0], size_range[1])
     std = random.randint(std_range[0], std_range[1]) / 100
@@ -348,31 +350,25 @@ def _create_blob(
 
 def apply_blob(
     mask,
-    size_range=(10, 20),
-    points_range=(5, 25),
-    std_range=(10, 75),
-    features_range=(15, 25),
-    value_range=(180, 250),
-):
+    size_range: Tuple[int, int] = (10, 20),
+    points_range: Tuple[int, int] = (5, 25),
+    std_range: Tuple[int, int] = (10, 75),
+    features_range: Tuple[int, int] = (15, 25),
+    value_range: Tuple[int, int] = (180, 250),
+) -> np.ndarray:
     """Places a Gaussian blob at a random location in the image.
 
     :param mask: The image to place the blob in.
-    :type mask: numpy.array
     :param size_range: Pair of ints determining the range from which the
            diameter of a blob is sampled.
-    :type size_range: tuple, optional
     :param points_range: Pair of ints determining the range from which the
            number of points in a blob is sampled.
-    :type points_range: tuple, optional
     :param std_range: Pair of ints determining the range from which the
            standard deviation of the blob distribution is sampled.
-    :type std_range: tuple, optional
     :param features_range: Pair of ints determining the range from which the
            number of features in the blob is sampled.
-    :type features_range: tuple, optional
     :param value_range: Pair of ints determining the range from which the
            value of a point in the blob is sampled.
-    :type value_range: tuple, optional
     """
     dim = min(
         mask.shape[0],
@@ -420,11 +416,10 @@ def apply_blob(
     return mask
 
 
-def sobel(image):
+def sobel(image: np.ndarray) -> np.ndarray:
     """Computes the gradient of the image intensity function.
 
     :param image: The image over which to create an edge mask.
-    :type image: numpy.array
     """
 
     gradX = cv2.Sobel(image, ddepth=cv2.CV_32F, dx=1, dy=0, ksize=-1)
@@ -434,7 +429,7 @@ def sobel(image):
     return gradient
 
 
-def make_white_transparent(img, ink_color=0):
+def make_white_transparent(img: np.ndarray, ink_color: int = 0):
     # Create the Ink Layer for the specified color.
     # inherit ink from input image
     if ink_color == -1:
@@ -461,10 +456,10 @@ def make_white_transparent(img, ink_color=0):
 
 
 def binary_threshold(
-    image,
+    image: np.ndarray,
     threshold_method,
-    threshold_arguments,
-):
+    threshold_arguments: str,
+) -> np.ndarray:
 
     # convert image to grascale
     if len(image.shape) > 2:

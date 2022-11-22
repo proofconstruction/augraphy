@@ -1,4 +1,6 @@
 import random
+from typing import List
+from typing import Tuple
 
 import numpy as np
 
@@ -10,19 +12,17 @@ class OneOf(Augmentation):
     """Given a list of Augmentations, selects one to apply.
 
     :param augmentations: A list of Augmentations to choose from.
-    :type augmentations: list
     :param p: The probability that this augmentation will be applied.
-    :type p: float, optional
     """
 
-    def __init__(self, augmentations, p=1):
+    def __init__(self, augmentations: List[Augmentation], p: float = 1):
         """Constructor method"""
         self.augmentations = augmentations
         self.augmentation_probabilities = self.compute_probability(self.augmentations)
         self.p = p
 
     # Randomly selects an Augmentation to apply to data.
-    def __call__(self, image, layer=None, force=False):
+    def __call__(self, image: np.ndarray, force: bool = False) -> Tuple[np.ndarray, List[Augmentation]]:
         if force or self.should_run():
 
             # Select one augmentation using the max value in probability values
@@ -43,11 +43,10 @@ class OneOf(Augmentation):
         r += f"], p={self.p})"
         return r
 
-    def compute_probability(self, augmentations):
+    def compute_probability(self, augmentations: List[Augmentation]) -> List[float]:
         """For each Augmentation in the input list, compute the probability of applying that Augmentation.
 
         :param augmentations: Augmentations to compute probability list for.
-        :type augmentations: list
         """
 
         # generate random 0-1 value for each augmentation

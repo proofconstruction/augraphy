@@ -1,3 +1,8 @@
+from typing import List
+from typing import Tuple
+
+import numpy as np
+
 from augraphy.base.augmentation import Augmentation
 
 
@@ -5,12 +10,10 @@ class AugmentationSequence(Augmentation):
     """A list of Augmentations to be applied sequentially.
 
     :param augmentations: A list of Augmentation objects to be applied.
-    :type augmentations: list
     :param p: The probability that this Augmentation will be applied.
-    :type p: float, optional
     """
 
-    def __init__(self, augmentations, p=1):
+    def __init__(self, augmentations: List[Augmentation], p: float = 1):
         """Constructor method"""
         self.augmentations = augmentations
         self.p = p
@@ -24,7 +27,7 @@ class AugmentationSequence(Augmentation):
         output += "])"
         return output
 
-    def __call__(self, image, layer=None, force=False):
+    def __call__(self, image: np.ndarray, force: bool = False) -> Tuple[np.ndarray, List[Augmentation]]:
         if force or self.should_run():
             result = image
             for augmentation in self.augmentations:

@@ -1,4 +1,6 @@
 import random
+from typing import Dict
+from typing import Tuple
 
 import cv2
 import numpy as np
@@ -12,40 +14,30 @@ class Faxify(Augmentation):
 
     :param scale_range: Pair of floats determining the range from which to
            divide the resolution by.
-    :type scale_range: tuple, optional
     :param monochrome: Flag to enable monochrome effect.
-    :type monochrome: int, optional
     :param monochrome_method: Monochrome thresholding method.
-    :type monochrome_method: string, optional
     :param monochrome_arguments: A dictionary contains argument to monochrome
             thresholding method.
-    :type monochrome_arguments: dict, optional
     :param halftone: Flag to enable halftone effect.
-    :type halftone: int, optional
     :param invert: Flag to invert grayscale value in halftone effect.
-    :type invert: int, optional
     :param half_kernel_size: Pair of ints to determine half size of gaussian kernel for halftone effect.
-    :type half_kernel_size: tuple, optional
     :param angle: Pair of ints to determine angle of halftone effect.
-    :type angle: tuple, optional
     :param sigma: Pair of ints to determine sigma value of gaussian kernel in halftone effect.
-    :type sigma: tuple, optional
     :param p: The probability that this Augmentation will be applied.
-    :type p: float, optional
     """
 
     def __init__(
         self,
-        scale_range=(1.0, 1.25),
-        monochrome=1,
-        monochrome_method="random",
-        monochrome_arguments={},
-        halftone=1,
-        invert=1,
-        half_kernel_size=(1, 1),
-        angle=(0, 360),
-        sigma=(1, 3),
-        p=1,
+        scale_range: Tuple[float, float] = (1.0, 1.25),
+        monochrome: int = 1,
+        monochrome_method: str = "random",
+        monochrome_arguments: Dict = {},
+        halftone: int = 1,
+        invert: int = 1,
+        half_kernel_size: Tuple[int, int] = (1, 1),
+        angle: Tuple[int, int] = (0, 360),
+        sigma: Tuple[int, int] = (1, 3),
+        p: float = 1,
     ):
 
         """Constructor method"""
@@ -64,13 +56,11 @@ class Faxify(Augmentation):
     def __repr__(self):
         return f"Faxify(scale_range={self.scale_range}, monochrome={self.monochrome}, monochrome_method={self.monochrome_method}, monochrome_arguments={self.monochrome_arguments}, halftone={self.halftone}, invert={self.invert}, half_kernel_size={self.half_kernel_size}, angle={self.angle}, sigma={self.sigma}, p={self.p})"
 
-    def cv_rotate(self, image, angle):
+    def cv_rotate(self, image: np.ndarray, angle: int) -> np.ndarray:
         """Rotate image based on the input angle.
 
         :param image: The image to apply the function.
-        :type image: numpy.array (numpy.uint8)
         :param angle: The angle of the rotation.
-        :type angle: int
         """
         # image shape
         ysize, xsize = image.shape[:2]
@@ -97,17 +87,19 @@ class Faxify(Augmentation):
         return image_rotated
 
     # generate halftone effect
-    def generate_halftone(self, image, half_kernel_size=2, angle=45, sigma=2):
+    def generate_halftone(
+        self,
+        image: np.ndarray,
+        half_kernel_size: int = 2,
+        angle: int = 45,
+        sigma: int = 2,
+    ) -> np.ndarray:
         """Generate halftone effect in the input image.
 
         :param image: The image to apply the function.
-        :type image: numpy.array (numpy.uint8)
         :param half_kernel_size: Half value of kernel size to generate halftone effect.
-        :type half_kernel_size: int
         :param angle: The angle of the halftone effect.
-        :type angle: int
         :param sigma: Sigma value of gaussian kernel for halftone effect.
-        :type sigma: int
         """
         # get total width of the kernel
         kernel_size = kernel_size_x = kernel_size_y = 2 * half_kernel_size + 1
@@ -153,17 +145,19 @@ class Faxify(Augmentation):
 
         return image_halftone
 
-    def complement_rgb_to_gray(self, img, invert=1, gray_level=255, max_value=255):
+    def complement_rgb_to_gray(
+        self,
+        img: np.ndarray,
+        invert: int = 1,
+        gray_level: int = 255,
+        max_value: int = 255,
+    ) -> np.ndarray:
         """Convert RGB/BGR image to single channel grayscale image.
 
         :param img: The image to apply the function.
-        :type img: numpy.array (numpy.uint8)
         :param invert: Flag to invert the generated grayscale value.
-        :type invert: int
         :param gray_level: The selected gray value.
-        :type gray_level: int
         :param max_value: Maximum value of gray value.
-        :type max_value: int
         """
 
         img_complement = max_value - img
@@ -180,11 +174,10 @@ class Faxify(Augmentation):
         else:
             return (1 - (img_gray / 255)).astype("float")
 
-    def downscale(self, image):
+    def downscale(self, image: np.ndarray) -> np.ndarray:
         """Downscale image based on the user input scale value.
 
         :param image: The image to apply the function.
-        :type image: numpy.array (numpy.uint8)
         """
 
         ysize, xsize = image.shape[:2]
@@ -195,7 +188,7 @@ class Faxify(Augmentation):
         return image_downscaled
 
     # Applies the Augmentation to input data.
-    def __call__(self, image, layer=None, force=False):
+    def __call__(self, image: np.ndarray, force: bool = False) -> np.ndarray:
         if force or self.should_run() or True:
             image = image.copy()
 

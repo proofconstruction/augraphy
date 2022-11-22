@@ -1,4 +1,6 @@
 import random
+from typing import Tuple
+from typing import Union
 
 import numpy as np
 
@@ -11,34 +13,27 @@ class Folding(Augmentation):
     """Emulates folding effect from perspective transformation
 
     :param fold_x: X coordinate of the folding effect.
-    :type fold_x: int, optional
     :param fold_deviation: Deviation (in pixels) of provided X coordinate location.
-    :type fold_deviation: tuple, optional
     :param fold count: Number of applied foldings
-    :type fold_count: int, optional
     :param fold_noise: Level of noise added to folding area. Range from
                         value of 0 to 1.
-    :type fold_noise: float, optional
     :param gradient_width: Tuple (min, max) Measure of the space affected
                             by fold prior to being warped (in units of
                             percentage of width of page)
-    :type gradient_width: tuple, optional
     :param gradient_height: Tuple (min, max) Measure of depth of fold (unit
                             measured as percentage page height)
-    :type gradient_height: tuple, optional
     :param p: The probability this Augmentation will be applied.
-    :type p: float, optional
     """
 
     def __init__(
         self,
-        fold_x=None,
-        fold_deviation=(0, 0),
-        fold_count=2,
-        fold_noise=0.1,
-        gradient_width=(0.1, 0.2),
-        gradient_height=(0.01, 0.02),
-        p=1,
+        fold_x: Union[int, None] = None,
+        fold_deviation: Tuple[int, int] = (0, 0),
+        fold_count: int = 2,
+        fold_noise: float = 0.1,
+        gradient_width: Tuple[float, float] = (0.1, 0.2),
+        gradient_height: Tuple[float, float] = (0.01, 0.02),
+        p: float = 1,
     ):
         super().__init__(p=p)
         self.fold_x = fold_x
@@ -54,28 +49,21 @@ class Folding(Augmentation):
 
     def apply_folding(
         self,
-        img,
-        ysize,
-        xsize,
-        gradient_width,
-        gradient_height,
-        fold_noise,
-    ):
+        img: np.ndarray,
+        ysize: int,
+        xsize: int,
+        gradient_width: int,
+        gradient_height: int,
+        fold_noise: float,
+    ) -> np.ndarray:
         """Apply perspective transform twice to get single folding effect.
 
         :param imge: The image to apply the function.
-        :type img: numpy.array (numpy.uint8)
         :param ysize: Height of the image.
-        :type ysize: int
         :param xsize: Width of the image.
-        :type xsize: int
         :param gradient_width:  Measure of the space affected by fold prior to being warped (in units of percentage of width of page).
-        :type gradient_width: int
         :param gradient_height: Measure of depth of fold (unit measured as percentage page height).
-        :type gradient_height: int
         :param fold_noise: Level of noise added to folding area.
-        :type fold_noise: float
-
         """
 
         min_fold_x = min(np.ceil(gradient_width[0] * xsize), xsize).astype("int")
@@ -143,7 +131,7 @@ class Folding(Augmentation):
             return img
 
     # Applies the Augmentation to input data.
-    def __call__(self, image, layer=None, force=False):
+    def __call__(self, image: np.ndarray, force: bool = False) -> np.ndarray:
         if force or self.should_run():
             image = image.copy()
 

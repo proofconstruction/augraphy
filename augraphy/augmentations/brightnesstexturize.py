@@ -1,4 +1,6 @@
 import random
+from typing import Tuple
+from typing import Union
 
 import cv2
 import numpy as np
@@ -12,14 +14,11 @@ class BrightnessTexturize(Augmentation):
 
     :param texturize_range: Pair of floats determining the range from which to sample values
            for the brightness matrix. Suggested value = <1.
-    :type brightness_range: tuple, optional
     :param deviation: Additional variation for the uniform sample.
-    :type deviation: float, optional
     :param p: The probability that this Augmentation will be applied.
-    :type p: float, optional
     """
 
-    def __init__(self, texturize_range=(0.9, 0.99), deviation=0.03, p=1):
+    def __init__(self, texturize_range: Tuple[float, float] = (0.9, 0.99), deviation: float = 0.03, p: float = 1):
         """Constructor method"""
         super().__init__(p=p)
         self.low = texturize_range[0]
@@ -31,8 +30,49 @@ class BrightnessTexturize(Augmentation):
     def __repr__(self):
         return f"BrightnessTexturize(texturize_range={self.texturize_range}, deviation={self.deviation}, p={self.p})"
 
+    def compute_texture(self, hsv: np.ndarray) -> np.ndarray:
+        # compute random value
+        value = random.uniform(self.low, self.high)
+        # convert to float (range 0-1)
+        hsv = np.array(hsv, dtype=np.float64)
+
+        # add noise using deviation
+        low_value = value - (value * self.deviation)  # *random.uniform(0, deviation)
+        max_value = value + (value * self.deviation)
+
+        # apply noise
+        makerand = np.vectorize(lambda x: random.uniform(low_value, max_value))
+        brightness_matrix = makerand(np.zeros((hsv.shape[0], hsv.shape[1])))
+        hsv[:, :, 1] *= brightness_matrix
+        hsv[:, :, 2] *= brightness_matrix
+        hsv[:, :, 1][hsv[:, :, 1] > 255] = 255
+        hsv[:, :, 2][hsv[:, :, 2] > 255] = 255
+
+        # convert back to uint8, apply bitwise not and convert to hsv again
+        hsv = np.array(hsv, dtype=np.uint8)
+        hsv = np.invert(hsv)
+        hsv = np.array(hsv, dtype=np.float64)
+
+        # add noise using deviation again
+        new_low_value = value - (value * self.deviation)
+        new_max_value = value + (value * self.deviation)
+
+        # apply noise again
+        makerand = np.vectorize(lambda x: random.uniform(new_low_value, new_max_value))
+        brightness_matrix = makerand(np.zeros((hsv.shape[0], hsv.shape[1])))
+        hsv[:, :, 1] *= brightness_matrix
+        hsv[:, :, 2] *= brightness_matrix
+        hsv[:, :, 1][hsv[:, :, 1] > 255] = 255
+        hsv[:, :, 2][hsv[:, :, 2] > 255] = 255
+
+        # convert back to uint8, apply bitwise not
+        hsv = np.array(hsv, dtype=np.uint8)
+        hsv = np.invert(hsv)
+
+        return hsv
+
     # Applies the Augmentation to input data.
-    def __call__(self, image, layer=None, force=False):
+    def __call__(self, image: np.ndarray, force: bool = False) -> np.ndarray:
         if force or self.should_run():
             image_output = image.copy()
 
@@ -46,44 +86,8 @@ class BrightnessTexturize(Augmentation):
                     cv2.COLOR_GRAY2BGR,
                 )
                 hsv = cv2.cvtColor(bgr, cv2.COLOR_BGR2HSV)
-            # compute random value
-            value = random.uniform(self.low, self.high)
-            # convert to float (range 0-1)
-            hsv = np.array(hsv, dtype=np.float64)
 
-            # add noise using deviation
-            low_value = value - (value * self.deviation)  # *random.uniform(0, deviation)
-            max_value = value + (value * self.deviation)
-
-            # apply noise
-            makerand = np.vectorize(lambda x: random.uniform(low_value, max_value))
-            brightness_matrix = makerand(np.zeros((hsv.shape[0], hsv.shape[1])))
-            hsv[:, :, 1] *= brightness_matrix
-            hsv[:, :, 2] *= brightness_matrix
-            hsv[:, :, 1][hsv[:, :, 1] > 255] = 255
-            hsv[:, :, 2][hsv[:, :, 2] > 255] = 255
-
-            # convert back to uint8, apply bitwise not and convert to hsv again
-            hsv = np.array(hsv, dtype=np.uint8)
-            hsv = cv2.bitwise_not(hsv)
-            hsv = np.array(hsv, dtype=np.float64)
-
-            # add noise using deviation again
-            low_value = value - (value * self.deviation)
-            max_value = value + (value * self.deviation)
-
-            # apply noise again
-            makerand = np.vectorize(lambda x: random.uniform(low_value, max_value))
-            brightness_matrix = makerand(np.zeros((hsv.shape[0], hsv.shape[1])))
-            hsv[:, :, 1] *= brightness_matrix
-            hsv[:, :, 2] *= brightness_matrix
-            hsv[:, :, 1][hsv[:, :, 1] > 255] = 255
-            hsv[:, :, 2][hsv[:, :, 2] > 255] = 255
-
-            # convert back to uint8, apply bitwise not
-            hsv = np.array(hsv, dtype=np.uint8)
-            hsv = cv2.bitwise_not(hsv)
-
+            hsv = self.compute_texture(hsv)
             image_output = cv2.cvtColor(hsv, cv2.COLOR_HSV2BGR)
 
             # convert back to gray

@@ -1,4 +1,5 @@
 import random
+from typing import Tuple
 
 import cv2
 import numpy as np
@@ -14,35 +15,27 @@ class LightingGradient(Augmentation):
 
     :param position: Tuple of ints (x, y) defining the center of light
         strip position, which is the reference point during rotation.
-    :type position: tuple, optional
     :param direction: Integer from 0 to 360 to indicate the rotation
         degree of light strip.
-    :type direction: int, optional
     :param max_brightness: Integer that max brightness in the mask.
-    :type max_brightness: int, optional
     :param min_brightness: Integer that min brightness in the mask
-    :type min_brightness: int, optional
     :param mode: The way that brightness decay from max to min:
         linear or gaussian
-    :type mode: string, optional
     :param linear_decay_rate: Only valid in linear_static mode.
         Suggested value is within [0.2, 2].
-    :type linear_decay_rate: float, optional
     :param transparency: Transparency of input image.
-    :type transparency: float, optional
     :param p: The probability this Augmentation will be applied.
-    :type p: float, optional
     """
 
     def __init__(
         self,
-        light_position=None,
-        direction=None,
-        max_brightness=255,
-        min_brightness=0,
-        mode="gaussian",
-        linear_decay_rate=None,
-        transparency=None,
+        light_position: Tuple[int, int] = None,
+        direction: int = None,
+        max_brightness: int = 255,
+        min_brightness: int = 0,
+        mode: str = "gaussian",
+        linear_decay_rate: int = None,
+        transparency: int = None,
         p=1,
     ):
         """Constructor method"""
@@ -61,30 +54,23 @@ class LightingGradient(Augmentation):
 
     def generate_parallel_light_mask(
         self,
-        mask_size,
-        position=None,
-        direction=None,
-        max_brightness=255,
-        min_brightness=0,
-        mode="gaussian",
-        linear_decay_rate=None,
+        mask_size: Tuple[int, int],
+        position: Tuple[int, int] = None,
+        direction: int = None,
+        max_brightness: int = 255,
+        min_brightness: int = 0,
+        mode: str = "gaussian",
+        linear_decay_rate: float = None,
     ):
         """Generates mask of parallel light.
 
         :param mask_size: Tuple of ints (w, h) defining generated mask size
-        :type mask_size: tuple
         :param position: Tuple of ints (x, y) defining the center of light strip position, which is the reference point during rotation.
-        :type position: tuple
-        :param direction: Integer from 0 to 360 to indicate the rotation egree of light strip.
-        :type direction: int
+        :param direction: Integer from 0 to 360 to indicate the rotation degree of light strip.
         :param max_brightness: Integer that max brightness in the mask.
-        :type max_brightness: int
         :param min_brightness: Integer that min brightness in the mask
-        :type min_brightness: int
         :param mode: The way that brightness decay from max to min: linear or gaussian.
-        :type mode: string
         :param linear_decay_rate: Only valid in linear_static mode. Suggested value is within [0.2, 2].
-        :type linear_decay_rate: float
         """
 
         if position is None:
@@ -149,19 +135,14 @@ class LightingGradient(Augmentation):
 
         return mask
 
-    def _decayed_value_in_norm(self, x, max_value, min_value, center, grange):
+    def _decayed_value_in_norm(self, x: int, max_value: int, min_value: int, center: int, grange: int):
         """Decay from max to min value following Gaussian distribution
 
         :param x: Current x position.
-        :type x: int
         :param max_value: Max of decayed value.
-        :type max_value: int
         :param min_value: Min of decayed value.
-        :type min_value: int
         :param center: Center of decayed value
-        :type center: int
         :param grange: Range of decay.
-        :type grange: int
         """
         radius = grange / 3
         center_prob = norm.pdf(center, center, radius)
@@ -169,17 +150,13 @@ class LightingGradient(Augmentation):
         x_value = (x_prob / center_prob) * (max_value - min_value) + min_value
         return x_value
 
-    def _decayed_value_in_linear(self, x, max_value, padding_center, decay_rate):
+    def _decayed_value_in_linear(self, x: int, max_value: int, padding_center: int, decay_rate: float):
         """Decay from max to min value with static linear decay rate.
 
         :param x: Current x position.
-        :type x: int
         :param max_value: Max of decayed value.
-        :type max_value: int
         :param padding_center: Center padding position.
-        :type padding_center: int
         :param decay_rate: Rate of linear decay.
-        :type decay_rate: float
         """
 
         x_value = max_value - abs(padding_center - x) * decay_rate
@@ -188,7 +165,7 @@ class LightingGradient(Augmentation):
         return x_value
 
     # Applies the Augmentation to input data.
-    def __call__(self, image, layer=None, force=False):
+    def __call__(self, image: np.ndarray, force=False) -> np.ndarray:
         if force or self.should_run():
             image = image.copy()
 

@@ -1,6 +1,7 @@
 import glob
 import os
 import random
+from typing import Tuple
 
 import cv2
 import numpy as np
@@ -16,15 +17,13 @@ class PaperFactory(Augmentation):
     a directory and resized to fit or cropped and tiled to fit.
 
     :param texture_path: Directory location to pull paper textures from.
-    :type texture_path: string, optional
     :param p: The probability that this Augmentation will be applied.
-    :type p: float, optional
     """
 
     def __init__(
         self,
-        texture_path="./paper_textures",
-        p=1,
+        texture_path: str = "./paper_textures",
+        p: float = 1,
     ):
         """Constructor method"""
         super().__init__(p=p)
@@ -52,7 +51,7 @@ class PaperFactory(Augmentation):
         return f"PaperFactory(texture_path={self.texture_path}, p={self.p})"
 
     # Applies the Augmentation to input data.
-    def __call__(self, image, layer=None, force=False):
+    def __call__(self, image: np.ndarray, force: bool = False) -> np.ndarray:
         if force or self.should_run():
 
             if self.paper_textures:
@@ -101,11 +100,10 @@ class PaperFactory(Augmentation):
                 """
                 pass
 
-    def check_paper_edges(self, texture):
+    def check_paper_edges(self, texture: np.ndarray) -> np.ndarray:
         """Crop image section with better texture.
 
         :param texture: Texture image.
-        :type texture: numpy array
         """
 
         ysize, xsize = texture.shape[:2]
@@ -193,13 +191,10 @@ class PaperFactory(Augmentation):
 
         return texture_cropped
 
-    def resize(self, texture, shape):
+    def resize(self, texture: np.ndarray, shape: Tuple[int, int]) -> np.ndarray:
         """Scales and zooms a given texture to fit a given shape.
 
         :param texture: Texture image.
-        :type texture: numpy array.3.
-        :param shape: x and y shape of scaled image.
-        :type shape: list or tuple
         """
 
         texture_h = texture.shape[0]

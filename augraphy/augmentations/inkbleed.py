@@ -1,5 +1,6 @@
 import random
 import sys
+from typing import Tuple
 
 import cv2
 import numpy as np
@@ -15,25 +16,20 @@ class InkBleed(Augmentation):
 
     :param intensity_range: Pair of floats determining the range from which
            noise intensity is sampled.
-    :type intensity: tuple, optional
     :param color_range: Pair of ints determining the range from which color
            noise is sampled.
-    :type color_range: tuple, optional
     :param kernel_size: Kernel size to determine area of inkbleed effect.
-    :type kernel_size: tuple, optional
     :param severity: Severity to determine concentration of inkbleed effect.
-    :type severity: tuple, optional
     :param p: The probability this Augmentation will be applied.
-    :type p: float, optional
     """
 
     def __init__(
         self,
-        intensity_range=(0.1, 0.2),
-        color_range=(0, 224),
-        kernel_size=(5, 5),
-        severity=(0.4, 0.6),
-        p=1,
+        intensity_range: Tuple[float, float] = (0.1, 0.2),
+        color_range: Tuple[int, int] = (0, 224),
+        kernel_size: Tuple[int, int] = (5, 5),
+        severity: Tuple[float, float] = (0.4, 0.6),
+        p: float = 1,
     ):
         """Constructor method"""
         super().__init__(p=p)
@@ -47,20 +43,21 @@ class InkBleed(Augmentation):
         return f"InkBleed(intensity_range={self.intensity_range}, color_range={self.color_range}, kernel_size={self.kernel_size}, severity={self.severity}, p={self.p})"
 
     # Applies the Augmentation to input data.
-    def __call__(self, image, layer=None, force=False):
+    def __call__(self, image: np.ndarray, force: bool = False) -> np.ndarray:
         if force or self.should_run():
             image = image.copy()
             intensity = random.uniform(self.intensity_range[0], self.intensity_range[1])
-            add_noise_fn = (
+            add_noise = np.vectorize(
                 lambda x, y: random.randint(self.color_range[0], self.color_range[1])
                 if (y == 255 and random.random() < intensity)
-                else x
+                else x,
             )
 
             severity = np.random.uniform(self.severity[0], self.severity[1])
-            apply_mask_fn = lambda x, y, z: x if (z != 255 or random.random() > severity) else y
-            add_noise = np.vectorize(add_noise_fn)
-            apply_mask = np.vectorize(apply_mask_fn)
+            apply_mask = np.vectorize(
+                lambda x, y, z: x if (z != 255 or random.random() > severity) else y,
+            )
+
             sobelized = sobel(image)
 
             kernel = np.ones(self.kernel_size, dtype="uint8")

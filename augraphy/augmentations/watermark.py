@@ -1,4 +1,5 @@
 import random
+from typing import Tuple
 
 import cv2
 import numpy as np
@@ -13,36 +14,27 @@ class WaterMark(Augmentation):
     Add watermark effect into input image.
 
     :param watermark_word: Word for watermark effect.
-    :type watermark_word: string, optional
     :param watermark_font_size: Pair of ints to determine font size of watermark effect.
-    :type watermark_font_size: tuple, optional
     :param watermark_font_thickness: Pair of ints to determine thickness of watermark effect.
-    :type watermark_font_thickness: tuple, optional
     :param watermark_font_type: Font type of watermark effect.
-    :type watermark_font_type: cv2 font types, optional
     :param watermark_rotation: Pair of ints to determine angle of rotation in watermark effect.
-    :type watermark_rotation: tuple, optional
     :param watermark_location: Location of watermark effect, select from top, bottom, left, right, center and random.
-    :type watermark_location: string, optional
     :param watermark_color: Triplets of ints to determine RGB color of watermark effect.
-    :type watermark_color: tuple, optional
     :param watermark_method: Method to overlay watermark foreground into input image.
-    :type watermark_method: string, optional
     :param p: The probability this Augmentation will be applied.
-    :type p: float, optional
     """
 
     def __init__(
         self,
-        watermark_word="random",
-        watermark_font_size=(10, 15),
-        watermark_font_thickness=(20, 25),
+        watermark_word: str = "random",
+        watermark_font_size: Tuple[int, int] = (10, 15),
+        watermark_font_thickness: Tuple[int, int] = (20, 25),
         watermark_font_type=cv2.FONT_HERSHEY_SIMPLEX,
-        watermark_rotation=(0, 360),
-        watermark_location="random",
-        watermark_color="random",
-        watermark_method="darken",
-        p=1,
+        watermark_rotation: Tuple[int, int] = (0, 360),
+        watermark_location: str = "random",
+        watermark_color: str = "random",
+        watermark_method: str = "darken",
+        p: float = 1,
     ):
         super().__init__(p=p)
         self.watermark_word = watermark_word
@@ -59,7 +51,7 @@ class WaterMark(Augmentation):
         return f"WaterMark(watermark_word={self.watermark_word}, watermark_font_size={self.watermark_font_size}, watermark_font_thickness={self.watermark_font_thickness}, watermark_font_type={self.watermark_font_type}, watermark_rotation={self.watermark_rotation}, watermark_location={self.watermark_location}, watermark_color={self.watermark_color}, watermark_method={self.watermark_method}, p={self.p})"
 
     # Create watermark
-    def create_watermark(self):
+    def create_watermark(self) -> np.ndarray:
         """Create watermark image."""
         # initialize watermark word
         if self.watermark_word == "random":
@@ -113,13 +105,11 @@ class WaterMark(Augmentation):
         return watermark_foreground
 
     # Apply watermark into input image
-    def apply_watermark(self, watermark_foreground, image):
+    def apply_watermark(self, watermark_foreground: np.ndarray, image: np.ndarray) -> np.ndarray:
         """Apply watermark foreground image to the background image.
 
         :param watermark_foreground: Foreground image contains the watermark effect.
-        :type watermark_foreground: numpy.array (numpy.uint8)
         :param image: The background image.
-        :type image: numpy.array (numpy.uint8)
         """
 
         # resize watermark foreground if the size is larger than input image
@@ -234,7 +224,7 @@ class WaterMark(Augmentation):
         return ob.build_overlay()
 
     # Applies the Augmentation to input data.
-    def __call__(self, image, layer=None, force=False):
+    def __call__(self, image: np.ndarray, force: bool = False) -> np.ndarray:
         if force or self.should_run():
             image = image.copy()
 
